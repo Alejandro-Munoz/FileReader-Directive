@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="base.css"/>
+    <title></title>
+    <script src="bower_components/angular/angular.js"></script>
+    <script>
+        angular.module('myApp', []).controller('MyController', function ($scope) {
+            $scope.message = 'Hello from controller!';
+            $scope.files = [];
+        }).directive('filereader', function ($q) {
+            return {
+                restrict: 'AE',
+                templateUrl: '_filereader.html',
+                scope: {
+
+                },
+                link: function (scope, element) {
+                    var ul = document.querySelector('ul');
+
+                    document.querySelector('input[type="file"]').addEventListener('change',function(){
+                        var files = Array.prototype.slice.call(this.files);
+                        var promises = files.map(getFileReaderPromise);
+                        Promise.all(promises).then(function (data) {
+                            data.forEach(function (datauri) {
+                                var li = createElement('li', ul);
+                                var img = createElement('img', li);
+                                img.src = datauri;
+                            });
+                        });
+                    });
+
+                    function getFileReaderPromise(file) {
+                        return new Promise(function (resolve, reject) {
+                            var reader = new FileReader();
+                            reader.addEventListener('loadend', function () {
+                                //console.log(this.result);
+                                resolve(this.result);
+                            });
+                            reader.addEventListener('error', function (err) {
+                                reject(err);
+                            });
+                            reader.readAsDataURL(file);
+                        });
+                    }
+
+                    function createElement(elementType, parent, className, innerHTML, custom) {
+                        var element = document.createElement(elementType);
+                        if (parent) parent.appendChild(element);
+                        if (className) element.className = className;
+                        if (innerHTML) element.innerHTML = innerHTML;
+
+                        if (typeof custom !== 'undefined') {
+                            for (var prop in custom) {
+                                element.setAttribute(prop, custom[prop]);
+                            }
+                        }
+
+                        return element;
+                    }
+
+                    scope.message = 'Scope from Directive!';
+                }
+
+
+            };
+        });
+    </script>
+</head>
+<body>
+    <div ng-controller="MyController">
+        {{message}}
+        <div filereader></div>
+    </div>
+</body>
+</html>
